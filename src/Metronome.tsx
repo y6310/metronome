@@ -1,36 +1,46 @@
-// src/Metronome.tsx
-import React, { useState, useRef } from 'react';
-import { Howl } from 'howler';
-import './Metronome.css';
+import React from 'react';
+import * as Tone from 'tone';
+import { useState, useEffect }  from "react";
 
-const clickSound = new Howl({
-  src: ['/path/to/click.mp3'], // ファイルパスを実際のファイルに変更
-});
+const Metronome = () => {
+  const [isstart,setisstart] = useState(false);
 
-interface MetronomeProps {
-  bpm: number;
-}
-
-const Metronome: React.FC<MetronomeProps> = ({ bpm }) => {
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const timerId = useRef<number | null>(null);
-
-  const startStopClick = () => {
-    if (isPlaying) {
-      clearInterval(timerId.current!);
-    } else {
-      timerId.current = window.setInterval(() => {
-        clickSound.play();
-      }, (60 / bpm) * 1000);
+   const setting = () =>{
+    const synth = new Tone.Synth().toDestination();
+    const loopA = new Tone.Loop(time => {
+      synth.triggerAttackRelease("C4", "8n", time);
+    }, "4n").start(0);
     }
-    setIsPlaying(!isPlaying);
+
+  const start = () =>{
+    setting() 
+    Tone.Transport.start()
+    setisstart(true);
+  }
+  const stop = () =>{
+    Tone.Transport.stop()
+    setisstart(false);
+   }
+
+
+   const handleClick = () => {
+    isstart ? stop() : start();
   };
 
+
+
+
+  // const playNote = () => {
+  //   // create a synth
+  //   const synth = new Tone.Synth().toDestination();
+  //   // play a note from that synth
+  //   synth.triggerAttackRelease("C4", "8n");
+  // };
+
   return (
-    <div className="metronome">
-      <h1>React Metronome</h1>
-      <div className="bpm-display">{bpm} BPM</div>
-      <button onClick={startStopClick}>{isPlaying ? 'Stop' : 'Start'}</button>
+    <div>
+      <h1>4/4</h1>
+      <button onClick={handleClick}>{isstart ? 'Start' : 'Stop'}</button>
     </div>
   );
 };
