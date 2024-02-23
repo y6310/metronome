@@ -1,46 +1,53 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import * as Tone from 'tone';
-import { useState, useEffect }  from "react";
+import { useState } from 'react';
 
-const Metronome = () => {
-  const [isstart,setisstart] = useState(false);
+interface MetronomeProps {
+  bpm: number;
+}
 
-   const setting = () =>{
+const Metronome: React.FC<MetronomeProps> = ({ bpm }) => {
+  const [isStart, setIsStart] = useState(false);
+  const loopRef = useRef<Tone.Loop>();
+
+  const setting = () => {
     const synth = new Tone.Synth().toDestination();
-    const loopA = new Tone.Loop(time => {
-      synth.triggerAttackRelease("C4", "8n", time);
-    }, "4n").start(0);
-    }
-
-  const start = () =>{
-    setting() 
-    Tone.Transport.start()
-    setisstart(true);
-  }
-  const stop = () =>{
-    Tone.Transport.stop()
-    setisstart(false);
-   }
-
-
-   const handleClick = () => {
-    isstart ? stop() : start();
+    loopRef.current = new Tone.Loop((time) => {
+      synth.triggerAttackRelease('C4', '32n', time);
+    }).start(0);
+    Tone.Transport.bpm.rampTo(bpm);
   };
 
+  const start = () => {
+    if (!isStart) {
+      // 既存のループがあれば停止
+      if (loopRef.current) {
+        loopRef.current.stop(0);
+      }
+      setting();
+      Tone.Transport.start();
+      setIsStart(true);
+    }
+  };
 
+  const stop = () => {
+    if (isStart) {
+      Tone.Transport.stop();
+      setIsStart(false);
+      // 既存のループがあれば停止
+      if (loopRef.current) {
+        loopRef.current.stop(0);
+      }
+    }
+  };
 
-
-  // const playNote = () => {
-  //   // create a synth
-  //   const synth = new Tone.Synth().toDestination();
-  //   // play a note from that synth
-  //   synth.triggerAttackRelease("C4", "8n");
-  // };
+  const handleClick = () => {
+    isStart ? stop() : start();
+  };
 
   return (
     <div>
-      <h1>4/4</h1>
-      <button onClick={handleClick}>{isstart ? 'Start' : 'Stop'}</button>
+      <button onClick={handleClick}>{isStart ? 'Stop' : 'Start'}</button>
     </div>
   );
 };
